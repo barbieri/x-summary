@@ -1,0 +1,16 @@
+{
+  "ownerHandle": "your_handle",
+  "timeWindowMinutes": 60,
+  "statePath": "./tmp/state.json",
+  "instructionsPath": "./INSTRUCTIONS.md",
+  "monitored": ["some_handle"],
+  "abortOnIncorrectOwnerHandle": false,
+  "browserProfilePath": "./tmp/browser-profile",
+  "timezone": "America/Sao_Paulo",
+  "parallelTabs": 4,
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "temperature": 0.2
+  }
+}

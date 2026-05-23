@@ -1,0 +1,78 @@
+import './env.js';
+import { access } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { scrapeTimelines } from './browser/scrape.js';
+import { acquireBrowserSession, closeBrowser, ensureOwnerSession } from './browser/session.js';
+import { parseCli, resolveAbortOnIncorrectOwnerHandle } from './cli.js';
+import { loadConfig } from './config/load.js';
+import { createScrapeLogger } from './logger.js';
+import { loadState, saveState } from './state/io.js';
+import type { AppState } from './types/state.js';
+
+/** Scrape timelines and persist state to `config.statePath`. */
+export async function runScrape(argv: string[]): Promise<AppState> {
+  const cli = parseCli(argv);
+  const resolvedConfigPath = resolve(cli.configPath);
+  await assertPathExists(resolvedConfigPath, 'Config file');
+
+  const config = await loadConfig(resolvedConfigPath);
+  const log = createScrapeLogger();
+  const abortOnIncorrectOwnerHandle = resolveAbortOnIncorrectOwnerHandle(
+    cli,
+    config.abortOnIncorrectOwnerHandle,
+  );
+
+  const previousState = await loadState(config.statePath);
+  let session = await acquireBrowserSession(config, log);
+
+  try {
+    session = await ensureOwnerSession(session, {
+      ownerHandle: config.ownerHandle,
+      headless: config.headless,
+      abortOnIncorrectOwnerHandle,
+      log,
+    });
+
+    const state = await scrapeTimelines(session.page, { config, previousState });
+    await saveState(config.statePath, state);
+
+    log.info(
+      {
+        statePath: config.statePath,
+        following: state.following.length,
+        forYouSuggestions: state.forYouSuggestions.length,
+        monitored: Object.fromEntries(
+          Object.entries(state.monitored).map(([handle, posts]) => [handle, posts.length]),
+        ),
+      },
+      'scrape complete; state saved',
+    );
+
+    return state;
+  } finally {
+    await closeBrowser(session, log);
+  }
+}
+
+async function assertPathExists(path: string, label: string): Promise<void> {
+  try {
+    await access(path);
+  } catch {
+    throw new Error(`${label} not found: ${path}`);
+  }
+}
+
+async function main(): Promise<void> {
+  await runScrape(process.argv);
+}
+
+const entryPath = process.argv[1];
+const isMain = entryPath !== undefined && resolve(entryPath) === fileURLToPath(import.meta.url);
+if (isMain) {
+  main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exitCode = 1;
+  });
+}

@@ -1,0 +1,16 @@
+/node_modules/
+/dist/
+/coverage/
+/tmp/
+*.log
+.env
+.env.*
+*~
+\#*
+.\#*
+!.env.example
+.playwright/
+.DS_Store
+.pnpm-store/
+/config.json
+/INSTRUCTIONS.md

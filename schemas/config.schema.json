@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://x-summary.local/schemas/config.schema.json",
+  "title": "X Summary Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ownerHandle", "timeWindowMinutes", "instructionsPath", "monitored", "llm"],
+  "properties": {
+    "ownerHandle": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Handle of the logged-in owner; used to verify the active browser session."
+    },
+    "timeWindowMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Collect posts from the last N minutes."
+    },
+    "statePath": {
+      "type": "string",
+      "default": "./tmp/state.json",
+      "description": "Path to the persisted scrape state JSON file."
+    },
+    "instructionsPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to INSTRUCTIONS.md prepended to the LLM prompt."
+    },
+    "monitored": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "description": "Handles not followed but included in summarization."
+    },
+    "headless": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true (default), run the browser in headless mode. When false, run the browser in visible mode."
+    },
+    "abortOnIncorrectOwnerHandle": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, exit with an error if login is required or the active session does not match ownerHandle. When false (default), keep the browser open and wait for you to log in or switch accounts."
+    },
+    "browserProfilePath": {
+      "type": "string",
+      "default": "./tmp/browser-profile",
+      "description": "Chrome user-data directory reused across runs (cookies, localStorage, IndexedDB). Not used for Vitest."
+    },
+    "browserCdpEndpoint": {
+      "type": "string",
+      "description": "Optional Chrome DevTools Protocol URL (e.g. http://127.0.0.1:9222). Attach to Chrome you start manually — best for avoiding FedCM/Google login failures."
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional IANA timezone for the summarization prompt (e.g. America/Sao_Paulo). Used when humanizing timestamps and the covered time window."
+    },
+    "parallelTabs": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 4,
+      "description": "Number of browser tabs used in parallel when scraping post detail pages and referenced posts."
+    },
+    "summarizeNoPosts": {
+      "type": "boolean",
+      "default": false,
+      "description": "When false (default), summarization skips the LLM and returns an empty string if the state has no posts. When true, call the LLM anyway so INSTRUCTIONS.md can shape a custom no-posts message (e.g. translation or tone)."
+    },
+    "llm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "google", "xai", "openrouter", "opencode"]
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Sampling temperature passed to generateText. Use lower values for more deterministic and focused summaries."
+        }
+      }
+    }
+  }
+}

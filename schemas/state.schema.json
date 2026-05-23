@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://x-summary.local/schemas/state.schema.json",
+  "title": "X Summary State",
+  "description": "Scraped timeline snapshot. Feed lists hold ordered post hrefs; full post data (stats, author, timestamp, body, references, thread) lives in posts keyed by canonical href.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timestamp",
+    "cutoffTimestamp",
+    "posts",
+    "following",
+    "forYouSuggestions",
+    "monitored"
+  ],
+  "properties": {
+    "timestamp": {
+      "description": "ISO8601 time when this state snapshot was generated.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "cutoffTimestamp": {
+      "description": "Absolute ISO8601 instant for the start of the collection window (not a duration or minute offset). First run: scrape time minus timeWindowMinutes. Incremental run: previous state timestamp.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "posts": {
+      "description": "All scraped posts keyed by canonical href. following, forYouSuggestions, monitored, and post references/thread point into this map.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/postHref" },
+      "additionalProperties": { "$ref": "#/$defs/post" }
+    },
+    "following": {
+      "description": "Ordered hrefs into posts for Following > Recent.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/postHref" }
+    },
+    "forYouSuggestions": {
+      "description": "Ordered hrefs into posts for For You suggestions.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/postHref" }
+    },
+    "monitored": {
+      "description": "Ordered hrefs into posts per monitored handle.",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/postHref" }
+      }
+    }
+  },
+  "$defs": {
+    "postHref": {
+      "description": "Canonical post URL; must exist as a key in posts.",
+      "type": "string",
+      "format": "uri"
+    },
+    "stats": {
+      "description": "Engagement counts at scrape time.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comments", "reposts", "likes"],
+      "properties": {
+        "comments": { "type": "integer", "minimum": 0 },
+        "reposts": { "type": "integer", "minimum": 0 },
+        "likes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "resolvedLink": {
+      "description": "External URL after redirects, with page metadata.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url"],
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "post": {
+      "description": "Post payload in posts (key = canonical href). references and thread are href lists into posts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stats"],
+      "properties": {
+        "author": {
+          "description": "Handle of the post author.",
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "description": "ISO8601 time when the post was published.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "stats": { "$ref": "#/$defs/stats" },
+        "body": {
+          "description": "Post text as markdown. Omitted for reposts without custom text.",
+          "type": "string"
+        },
+        "thread": {
+          "description": "Hrefs of ancestor posts in the same thread (root-first); keys in posts.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/postHref" }
+        },
+        "links": {
+          "description": "External links from the body, resolved with title and description.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/resolvedLink" }
+        },
+        "references": {
+          "description": "Hrefs of quoted or referenced posts; keys in posts.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/postHref" }
+        }
+      }
+    }
+  }
+}
