@@ -169,6 +169,7 @@ pnpm run start [config.json]                             # scrape then summarize
 
 - **Login / owner fix**: `runManualLoginWindow()` uses `loginContextOptions()` when auth is missing **or** `ownerHandle` mismatches (non-CDP). User closes Chrome; then scrape session relaunches. **Never** `page.goto` login URL on the scrape context.
 - **Scrape**: `openPersistentSession()` → `persistentContextOptions()` + stealth script. Re-open after login window if `auth_token`/`ct0` missing.
+- **Early stop**: `src/scrape.ts` handles `SIGTERM` by logging, closing the active Playwright browser/session, and exiting with code `1`; it skips `saveState` if the signal arrives before persistence starts.
 - Session cookies: `auth_token` + `ct0` (`hasXAuthCookies`). Use email/password, not Google.
 - If login is required or `ownerHandle` does not match (non-CDP): manual login window, then scrape session relaunch (see README).
 - X DOM changes often — update `src/browser/scrape.ts` and document the fix here.

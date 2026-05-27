@@ -3,7 +3,12 @@ import { access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scrapeTimelines } from './browser/scrape.js';
-import { acquireBrowserSession, closeBrowser, ensureOwnerSession } from './browser/session.js';
+import {
+  acquireBrowserSession,
+  type BrowserSession,
+  closeBrowser,
+  ensureOwnerSession,
+} from './browser/session.js';
 import { parseCli, resolveAbortOnIncorrectOwnerHandle } from './cli.js';
 import { loadConfig } from './config/load.js';
 import { createScrapeLogger } from './logger.js';
@@ -24,9 +29,37 @@ export async function runScrape(argv: string[]): Promise<AppState> {
   );
 
   const previousState = await loadState(config.statePath);
-  let session = await acquireBrowserSession(config, log);
+  let session: BrowserSession | null = null;
+  let sigtermReceived = false;
+  let sigtermCleanup: Promise<void> | null = null;
+
+  const handleSigterm = (): void => {
+    if (sigtermReceived) {
+      return;
+    }
+
+    sigtermReceived = true;
+    process.exitCode = 1;
+    log.warn('SIGTERM received; stopping scrape early');
+
+    if (!session) {
+      process.exit(1);
+    }
+
+    sigtermCleanup = closeBrowser(session, log)
+      .catch((err: unknown) => {
+        log.error({ err }, 'failed to close browser after SIGTERM: %s', err);
+      })
+      .finally(() => {
+        process.exit(1);
+      });
+  };
+
+  process.once('SIGTERM', handleSigterm);
 
   try {
+    session = await acquireBrowserSession(config, log);
+
     session = await ensureOwnerSession(session, {
       ownerHandle: config.ownerHandle,
       headless: config.headless,
@@ -35,6 +68,9 @@ export async function runScrape(argv: string[]): Promise<AppState> {
     });
 
     const state = await scrapeTimelines(session.page, { config, previousState });
+    if (sigtermReceived) {
+      throw new Error('Scrape stopped early after SIGTERM');
+    }
     await saveState(config.statePath, state);
 
     log.info(
@@ -51,7 +87,13 @@ export async function runScrape(argv: string[]): Promise<AppState> {
 
     return state;
   } finally {
-    await closeBrowser(session, log);
+    process.off('SIGTERM', handleSigterm);
+
+    if (sigtermCleanup) {
+      await sigtermCleanup;
+    } else if (session) {
+      await closeBrowser(session, log);
+    }
   }
 }
 
