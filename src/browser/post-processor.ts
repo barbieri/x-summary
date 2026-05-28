@@ -112,7 +112,17 @@ export class PostProcessor {
 
   private async resolveLinksCached(urls: string[]): Promise<ResolvedLink[]> {
     const results: ResolvedLink[] = [];
-    for (const url of urls) {
+    const seen = new Set<string>();
+    for (const rawUrl of urls) {
+      const url = normalizeLinkUrl(rawUrl);
+      if (!url) {
+        this.log.warn({ url: rawUrl }, 'invalid external link skipped');
+        continue;
+      }
+      if (seen.has(url)) {
+        continue;
+      }
+      seen.add(url);
       const cached = this.linkCache.get(url);
       if (cached) {
         results.push(cached);
@@ -130,8 +140,14 @@ export class PostProcessor {
           SCRAPE_ITEM_TIMEOUT_MS,
           `external link ${url}`,
         );
-        this.linkCache.set(url, resolved);
-        results.push(resolved);
+        const resolvedUrl = normalizeLinkUrl(resolved.url);
+        if (!resolvedUrl) {
+          this.log.warn({ url, resolved }, 'resolved external link is invalid; skipping');
+          continue;
+        }
+        const link = { ...resolved, url: resolvedUrl };
+        this.linkCache.set(url, link);
+        results.push(link);
       } catch (err) {
         this.log.warn({ url, err }, 'external link resolution failed; keeping url only');
         const fallback = { url };
@@ -140,6 +156,21 @@ export class PostProcessor {
       }
     }
     return results;
+  }
+}
+
+function normalizeLinkUrl(raw: string): string | null {
+  if (raw.startsWith('blob:')) {
+    return null;
+  }
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
   }
 }
 

@@ -86,15 +86,16 @@ Scraping behavior:
 2. **Post detail** (`src/browser/tweet-detail-api.ts` + `src/browser/post-detail.ts`): primary source is **TweetDetail GraphQL** captured on `page.goto` / reload — body, stats, author, timestamp, media URLs (`pbs.twimg.com`, `/video/`, broadcasts), quotes (`quoted_status_result`), thread chain (`in_reply_to_status_id_str`), bare reposts (`retweeted_status_result`). **No `blob:` video URLs.** DOM parsing is fallback only when API capture fails. The main timeline tab scrapes one post at a time, then **`scrollPastArticle`**. DOM parsing has a **60s** timeout; link resolution runs afterward with **30s** per URL.
 3. **External links**: resolved with a **30s** per-URL timeout; failures keep `{ url }` only (no title/description). Only `http:` / `https:` URLs are resolved; loopback, localhost, link-local, private, multicast, carrier-grade NAT, and private DNS targets are blocked before each request and redirect hop.
 4. **Body** from TweetDetail `full_text` / `note_tweet` → markdown via `plainTextToMarkdown` and `entities.urls`. **Links**: `entities.urls`, `extended_entities.media` (`media_url_https`, `expanded_url`, video `variants`), card bindings — never `blob:` from DOM video elements. External links follow redirects even when HTML metadata fetch fails (403).
-5. **Quotes / threads / reposts**: from `quoted_status_result`, `in_reply_to_status_id_str` chain, and `retweeted_status_result` in TweetDetail JSON. DOM fallback only when API capture fails.
-6. **Threads**: multiple conversation articles before the focal tweet (same status id as the page URL) — parsed inline; not replies below the focal post.
-7. Click **Show more** / **Show N posts** with human-paced delays (500ms + random jitter).
-8. After timeline UI actions, **wait for network idle** and `aria-busy="false"` before reading DOM. Post detail pages use **`waitForConversationReady`** (conversation timeline + first article) instead of `networkidle`, which is too slow under parallel tabs.
-9. Prefer **role**, **accessible name**, **href**, **aria-***, and **data-testid** — avoid CSS class selectors.
-10. Browser locale is **`en-US`**.
-11. **Post cache** (`PostProcessor`): reuse scraped posts by `href` when the same item appears again. Inline **thread** snapshots are finalized for link metadata but are **not** cached under their href (avoids partial thread rows blocking a full detail scrape).
-12. **Cycle guard** (separate `Set<href>`): stop adding `references` / `thread` entries when a cycle is detected.
-13. **Following dedup set** (separate from cycle guard): skip For You suggestions already collected in Following.
+5. **Link state safety**: before a link is cached or persisted, `PostProcessor` must accept only valid `http:` / `https:` URLs after `new URL(...).toString()` normalization, then de-duplicate by normalized URL. Invalid raw links or invalid resolver results are logged at `warn` and skipped so state validation cannot fail on a bad link.
+6. **Quotes / threads / reposts**: from `quoted_status_result`, `in_reply_to_status_id_str` chain, and `retweeted_status_result` in TweetDetail JSON. DOM fallback only when API capture fails.
+7. **Threads**: multiple conversation articles before the focal tweet (same status id as the page URL) — parsed inline; not replies below the focal post.
+8. Click **Show more** / **Show N posts** with human-paced delays (500ms + random jitter).
+9. After timeline UI actions, **wait for network idle** and `aria-busy="false"` before reading DOM. Post detail pages use **`waitForConversationReady`** (conversation timeline + first article) instead of `networkidle`, which is too slow under parallel tabs.
+10. Prefer **role**, **accessible name**, **href**, **aria-***, and **data-testid** — avoid CSS class selectors.
+11. Browser locale is **`en-US`**.
+12. **Post cache** (`PostProcessor`): reuse scraped posts by `href` when the same item appears again. Inline **thread** snapshots are finalized for link metadata but are **not** cached under their href (avoids partial thread rows blocking a full detail scrape).
+13. **Cycle guard** (separate `Set<href>`): stop adding `references` / `thread` entries when a cycle is detected.
+14. **Following dedup set** (separate from cycle guard): skip For You suggestions already collected in Following.
 
 ## Persisted state shape
 
