@@ -17,6 +17,9 @@ import type { AppState } from './types/state.js';
 
 /** Scrape timelines and persist state to `config.statePath`. */
 export async function runScrape(argv: string[]): Promise<AppState> {
+  const start = Date.now();
+  const getElapsedInSeconds = () => (Date.now() - start) / 1000;
+
   const cli = parseCli(argv);
   const resolvedConfigPath = resolve(cli.configPath);
   await assertPathExists(resolvedConfigPath, 'Config file');
@@ -40,7 +43,10 @@ export async function runScrape(argv: string[]): Promise<AppState> {
 
     sigtermReceived = true;
     process.exitCode = 1;
-    log.warn('SIGTERM received; stopping scrape early');
+    log.warn(
+      { elapsedInSeconds: getElapsedInSeconds() },
+      'SIGTERM received; stopping scrape early',
+    );
 
     if (!session) {
       process.exit(1);
@@ -48,7 +54,11 @@ export async function runScrape(argv: string[]): Promise<AppState> {
 
     sigtermCleanup = closeBrowser(session, log)
       .catch((err: unknown) => {
-        log.error({ err }, 'failed to close browser after SIGTERM: %s', err);
+        log.error(
+          { err, elapsedInSeconds: getElapsedInSeconds() },
+          'failed to close browser after SIGTERM: %s',
+          err,
+        );
       })
       .finally(() => {
         process.exit(1);
@@ -78,6 +88,7 @@ export async function runScrape(argv: string[]): Promise<AppState> {
         statePath: config.statePath,
         following: state.following.length,
         forYouSuggestions: state.forYouSuggestions.length,
+        elapsedInSeconds: getElapsedInSeconds(),
         monitored: Object.fromEntries(
           Object.entries(state.monitored).map(([handle, posts]) => [handle, posts.length]),
         ),
