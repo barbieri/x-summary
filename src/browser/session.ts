@@ -185,7 +185,7 @@ function attachBrowserLogging(page: Page): void {
 
   const browserLog = createScrapeLogger().child({ source: 'browser' });
 
-  const messageRemap: { match: RegExp; note: string; level: LogLevel }[] = [
+  const messageRemap: { match: RegExp; matchUrl?: RegExp; note: string; level: LogLevel }[] = [
     {
       match:
         /^The resource \S+ was preloaded using link preload but not used within a few seconds/i,
@@ -197,6 +197,12 @@ function attachBrowserLogging(page: Page): void {
       match: /GSI_LOGGER|FedCM/i,
       note: 'Google Sign-In noise; use X email/password login instead',
       level: 'error',
+    },
+    {
+      match: /Failed to load resource: the server responded with a status of 503/i,
+      matchUrl: /[/][/]ads-api[.]x/i,
+      note: 'Failed to load resource advertisement resource',
+      level: 'debug',
     },
   ];
   const levelMap: Record<ReturnType<ConsoleMessage['type']>, LogLevel> = {
@@ -224,10 +230,11 @@ function attachBrowserLogging(page: Page): void {
   page.on('console', (message: ConsoleMessage) => {
     const type = message.type();
     const text = message.text();
-    const payload = { type, text, location: message.location() };
+    const location = message.location();
+    const payload = { type, text, location };
 
-    for (const { match, note, level } of messageRemap) {
-      if (match.test(text)) {
+    for (const { match, matchUrl, note, level } of messageRemap) {
+      if (match.test(text) && (matchUrl?.test(location.url) ?? true)) {
         browserLog[level]({ ...payload, note }, 'browser console: %s', text);
         return;
       }
