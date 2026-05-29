@@ -5,10 +5,13 @@ function readLogLevel(): string {
   return process.env['LOG_LEVEL'] ?? 'info';
 }
 
-export const logger = pino({
-  level: readLogLevel(),
-  base: { app: 'x-summary' },
-});
+export const logger = pino(
+  {
+    level: readLogLevel(),
+    base: { app: 'x-summary' },
+  },
+  pino.destination(2), // all logs should go to stderr
+);
 
 export type ScrapeLogger = pino.Logger;
 export type LogLevel = pino.Level;
