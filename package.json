@@ -9,6 +9,15 @@
   "type": "module",
   "private": false,
   "license": "GPL-3.0-or-later",
+  "keywords": [
+    "cli",
+    "x-summary",
+    "scrape",
+    "playwright",
+    "summarize",
+    "x.com",
+    "twitter"
+  ],
   "engines": {
     "node": ">=24.15.0"
   },
