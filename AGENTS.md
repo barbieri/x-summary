@@ -29,6 +29,7 @@ Scraping walks top-to-bottom until:
 
 | Path | Purpose |
 |------|---------|
+| `src/x-summary.ts` | CLI: scrape timelines then summarize |
 | `src/scrape.ts` | CLI: scrape timelines → save state |
 | `src/summarize.ts` | CLI: load state → LLM summary |
 | `src/logger.ts` | Pino logger + scrape failure helpers |
@@ -152,17 +153,20 @@ pnpm run typecheck
 pnpm run inspect:x config.json --action home-following   # dump X DOM for scraper work
 pnpm run scrape [config.json]                            # scrape → save state (tsx)
 pnpm run summarize [config.json]                         # summarize persisted state (tsx)
+pnpm run x-summary [config.json]                         # scrape then summarize (tsx)
 pnpm run scrape:bundle [config.json]                     # minified bundle from pnpm build
 pnpm run summarize:bundle [config.json]                  # minified bundle from pnpm build
+pnpm run x-summary:bundle [config.json]                  # minified bundle from pnpm build
 pnpm run test
-pnpm run start [config.json]                             # scrape then summarize
+pnpm run start [config.json]                             # scrape then summarize (tsx alias to x-summary)
+pnpm run start:bundle [config.json]                      # scrape then summarize (bundle)
 ```
 
 ## npm publish
 
 - **`prepublishOnly`** runs `pnpm run build` (minified `dist/bundle/*.mjs` with shebangs).
 - **`files`** ships bundles, `schemas/`, examples, and docs only (no `src/` or dev tooling).
-- **`bin`**: `x-summary-scrape`, `x-summary-summarize` → `dist/bundle/*.mjs`.
+- **`bin`**: `x-summary`, `x-summary-scrape`, `x-summary-summarize` → `dist/bundle/*.mjs`.
 - **Runtime deps** (including `playwright`) are normal `dependencies`; users run `npx playwright install chrome` after install.
 - **`prepare`** runs Husky only in a git clone with dev deps, not on end-user `npm install`.
 

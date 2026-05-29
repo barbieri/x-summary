@@ -9,6 +9,7 @@ await esbuild.build({
   entryPoints: {
     scrape: 'src/scrape.ts',
     summarize: 'src/summarize.ts',
+    'x-summary': 'src/x-summary.ts',
   },
   outdir: BUNDLE_DIR,
   outExtension: { '.js': '.mjs' },

@@ -23,6 +23,7 @@
     "README.md"
   ],
   "bin": {
+    "x-summary": "dist/bundle/x-summary.mjs",
     "x-summary-scrape": "dist/bundle/scrape.mjs",
     "x-summary-summarize": "dist/bundle/summarize.mjs"
   },
@@ -34,8 +35,10 @@
     "format": "biome format --write .",
     "lint": "biome lint --error-on-warnings .",
     "qa": "run-p check build test typecheck",
-    "start": "run-s --silent scrape summarize --",
-    "start:bundle": "run-s --silent scrape:bundle summarize:bundle --",
+    "start": "node --import tsx src/x-summary.ts",
+    "start:bundle": "node dist/bundle/x-summary.mjs",
+    "x-summary": "node --import tsx src/x-summary.ts",
+    "x-summary:bundle": "node dist/bundle/x-summary.mjs",
     "scrape": "node --import tsx src/scrape.ts",
     "summarize": "node --import tsx src/summarize.ts",
     "scrape:bundle": "node dist/bundle/scrape.mjs",

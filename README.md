@@ -22,7 +22,13 @@ cp node_modules/x-summary/INSTRUCTIONS.example.md INSTRUCTIONS.md
 cp node_modules/x-summary/.env.example .env
 ```
 
-Edit `config.json`, `INSTRUCTIONS.md`, and `.env` (API keys). Then:
+Edit `config.json`, `INSTRUCTIONS.md`, and `.env` (API keys). Then run them in one go:
+
+```bash
+npx x-summary config.json
+```
+
+Or run them individually:
 
 ```bash
 npx x-summary-scrape config.json
@@ -35,8 +41,7 @@ Global install (optional):
 npm install -g x-summary
 npx playwright install chrome
 # run from a directory with config.json, INSTRUCTIONS.md, and .env
-x-summary-scrape config.json
-x-summary-summarize config.json
+x-summary config.json
 ```
 
 `playwright install chrome` downloads browser support for the Playwright version bundled as a dependency. Run it once per machine (or after upgrading `x-summary`).
@@ -151,9 +156,11 @@ pnpm run build:cli   # esbuild only
 pnpm run inspect:x config.json --action home-following   # dump X DOM for scraper work
 pnpm run scrape [config.json]                            # scrape → save state (tsx)
 pnpm run summarize [config.json]                         # summarize persisted state (tsx)
-pnpm run start [config.json]                             # scrape then summarize
+pnpm run x-summary [config.json]                         # scrape then summarize (tsx)
+pnpm run start [config.json]                             # scrape then summarize (tsx alias to x-summary)
 pnpm run scrape:bundle [config.json]                     # minified bundle (after build)
 pnpm run summarize:bundle [config.json]                  # minified bundle (after build)
+pnpm run x-summary:bundle [config.json]                  # minified bundle (after build)
 pnpm run start:bundle [config.json]                      # minified bundle (after build)
 ```
 

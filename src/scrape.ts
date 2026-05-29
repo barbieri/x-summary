@@ -13,10 +13,11 @@ import { parseCli, resolveAbortOnIncorrectOwnerHandle } from './cli.js';
 import { loadConfig } from './config/load.js';
 import { createScrapeLogger } from './logger.js';
 import { loadState, saveState } from './state/io.js';
+import type { AppConfig } from './types/config.js';
 import type { AppState } from './types/state.js';
 
 /** Scrape timelines and persist state to `config.statePath`. */
-export async function runScrape(argv: string[]): Promise<AppState> {
+export async function runScrape(argv: string[]): Promise<{ state: AppState; config: AppConfig }> {
   const start = Date.now();
   const getElapsedInSeconds = () => (Date.now() - start) / 1000;
 
@@ -96,7 +97,7 @@ export async function runScrape(argv: string[]): Promise<AppState> {
       'scrape complete; state saved',
     );
 
-    return state;
+    return { state, config };
   } finally {
     process.off('SIGTERM', handleSigterm);
 
