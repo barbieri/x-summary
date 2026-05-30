@@ -140,15 +140,18 @@ async function launchScrapeContext(
 ): Promise<BrowserSession> {
   log.info({ profilePath }, 'opening scrape Chrome profile (Playwright-controlled)');
 
+  const options = persistentContextOptions(headless);
   let context: BrowserContext;
   try {
-    context = await chromium.launchPersistentContext(
-      profilePath,
-      persistentContextOptions(headless),
-    );
+    context = await chromium.launchPersistentContext(profilePath, options);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/process_singleton|singleton|user data dir|profile/i.test(message)) {
+      log.error(
+        { err: error, profilePath, options },
+        'Failed to launch persistent session: %s',
+        error,
+      );
       throw new Error(
         `Chrome profile is locked at ${profilePath}. Close any other Chrome window using this profile.`,
       );
