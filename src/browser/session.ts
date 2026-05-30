@@ -205,7 +205,7 @@ function attachBrowserLogging(page: Page): void {
       level: 'debug',
     },
   ];
-  const levelMap: Record<ReturnType<ConsoleMessage['type']>, LogLevel> = {
+  const levelMap: Record<ReturnType<ConsoleMessage['type']> | 'verbose', LogLevel> = {
     assert: 'fatal',
     clear: 'debug',
     count: 'debug',
@@ -225,6 +225,7 @@ function attachBrowserLogging(page: Page): void {
     time: 'debug',
     timeEnd: 'debug',
     trace: 'trace',
+    verbose: 'debug',
   };
 
   page.on('console', (message: ConsoleMessage) => {
