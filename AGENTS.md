@@ -59,6 +59,7 @@ Scraping walks top-to-bottom until:
 - **Auto-fix**: `pnpm run check:fix` applies Biome format + safe lint fixes; re-run `pnpm run qa` after.
 - **Pre-commit**: Husky runs `pnpm run qa` — do not commit with failing QA.
 - Agents must run `pnpm run qa` after their changes and fix any failures before handing work back.
+- **Bundle entry conflict**: Each CLI entry point (`scrape.ts`, `summarize.ts`, `x-summary.ts`) has an `isMain` guard that checks `import.meta.url`. When bundled together (e.g. `x-summary.mjs`), multiple guards can fire simultaneously, causing duplicate browser launches to race on the same profile. Documented via `__BUNDLE_ENTRY_NAME` — esbuild `define` sets this per-entry so child modules skip their `isMain` block when bundled inside another entry. The build script (`scripts/build-cli.mjs`) builds each entry in a separate `esbuild.build()` call with its own define. Always follow this pattern when adding new entry points that bundle shared modules.
 
 ## JSON and validation
 

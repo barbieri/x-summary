@@ -121,8 +121,14 @@ async function main(): Promise<void> {
   await runScrape(process.argv);
 }
 
+/** Replaced at build time by esbuild with the entry-point name; undefined otherwise. */
+declare const __BUNDLE_ENTRY_NAME: string | undefined;
+
 const entryPath = process.argv[1];
-const isMain = entryPath !== undefined && resolve(entryPath) === fileURLToPath(import.meta.url);
+const isMain =
+  entryPath !== undefined &&
+  resolve(entryPath) === fileURLToPath(import.meta.url) &&
+  (typeof __BUNDLE_ENTRY_NAME === 'undefined' || __BUNDLE_ENTRY_NAME === 'scrape');
 if (isMain) {
   main().catch((error: unknown) => {
     logger.fatal({ err: error }, 'scrape failed: %s', error);
