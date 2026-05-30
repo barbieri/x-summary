@@ -11,7 +11,7 @@ import {
 } from './browser/session.js';
 import { parseCli, resolveAbortOnIncorrectOwnerHandle } from './cli.js';
 import { loadConfig } from './config/load.js';
-import { createScrapeLogger } from './logger.js';
+import { createScrapeLogger, logger } from './logger.js';
 import { loadState, saveState } from './state/io.js';
 import type { AppConfig } from './types/config.js';
 import type { AppState } from './types/state.js';
@@ -125,8 +125,7 @@ const entryPath = process.argv[1];
 const isMain = entryPath !== undefined && resolve(entryPath) === fileURLToPath(import.meta.url);
 if (isMain) {
   main().catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(message);
-    process.exitCode = 1;
+    logger.fatal({ err: error }, 'scrape failed: %s', error);
+    process.exit(1);
   });
 }
