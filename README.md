@@ -8,6 +8,154 @@ Summarize your X (Twitter) **Following** (Recent) feed and **For You** suggestio
 - Google Chrome (Playwright `channel: "chrome"`)
 - API key(s) for your chosen LLM provider
 
+## Sending reports
+
+Use a tool such as [run-and-notify](https://github.com/barbieri/run-and-notify) to send the processed output to Slack or Email.
+
+The example bellow is my setup that notifies me via Email and Slack at 6am/pm (12 hour interval = 720 minutes), it assumes code was checkout and installed at `$HOME/git/x-summary` and `$HOME/git/run-and-notify`:
+
+### Setup the environment variables
+
+Create `$HOME/git/x-summary/tmp/env.sh`
+
+``` bash
+# .env
+export LOG_LEVEL=warn
+# Choose your notification delivery channel
+export SMTP_PASS=some-pass
+export SLACK_BOT_TOKEN=xoxb-...
+# Choose your summarization model provider
+export OPENROUTER_API_KEY=sk-or-v1-...
+export OPENAI_API_KEY=sk-svcacct-...
+```
+
+> **NOTE:** if you plan to use Slack, you need a `SLACK_BOT_TOKEN` with permissions `chat:write` and `im:write`.
+
+### Configure run-and-notify
+
+Create `$HOME/git/x-summary/tmp/run-and-notify-config.json`:
+
+``` json
+{
+  "timeoutSeconds": 2400,
+  "hideCommandIfSuccess": true,
+  "propagateExitCode": true,
+  "name": "X Summary",
+  "stdout": {
+    "format": "markdown"
+  },
+  "stderr": {
+    "format": "jsonl"
+  },
+  "transports": {
+    "smtp": {
+      "enabled": true,
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false,
+      "from": "YOUR_EMAIL@gmail.com",
+      "to": ["YOUR_EMAIL+x-summary@gmail.com"],
+      "auth": {
+        "user": "YOUR_EMAIL@gmail.com",
+        "passEnvVar": "SMTP_PASS"
+      }
+    },
+    "slack": {
+      "enabled": true,
+      "tokenEnvVar": "SLACK_BOT_TOKEN",
+      "defaultChannel": "@YOUR_SLACK_USER"
+    }
+  }
+}
+```
+
+### Configure x-summary
+
+Create `$HOME/git/x-summary/tmp/x-summary-config.json` (720 minutes time window is 12 hours):
+
+``` json
+{
+  "ownerHandle": "YOUR_X_USER",
+  "abortOnIncorrectOwnerHandle": true,
+  "timeWindowMinutes": 720,
+  "statePath": "./tmp/state.json",
+  "instructionsPath": "./INSTRUCTIONS.md",
+  "monitored": ["SOME_X_USER_TO_MONITOR", "OTHER_X_USER_TO_MONITOR", "gsbarbieri"],
+  "timezone": "America/New_York",
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-5.4-mini"
+  }
+}
+```
+
+> **NOTE:** `openai/gpt-5.4-mini` is a cheap model that provides good summarization. To use `provider: openai` you need `OPENAI_API_KEY`.
+
+Define your summarization prompt instructions or use the provided example:
+
+``` bash
+ln -s INSTRUCTIONS.example.md INSTRUCTIONS.md
+```
+
+> **NOTE:** given the configuration it will abort if the browser is not properly logged in to the `ownerHandle` user (`abortOnIncorrectOwnerHandle: true`), the you **MUST** run this once **WITHOUT** that flag to allow the login!
+
+
+### Create a runner script
+
+Create `$HOME/git/x-summary/tmp/x-summary-run-and-notify.sh` and make it executable (`chmod +x`):
+
+``` bash
+#!/bin/sh
+
+set -o pipefail
+
+source $HOME/git/x-summary/tmp/env.sh
+
+cd $HOME/git/run-and-notify
+
+node dist/bundle/run-and-notify.mjs \
+        --config=$HOME/git/x-summary/tmp/run-and-notify-config.json \
+        --cwd=$HOME/git/x-summary -- \
+        node dist/bundle/x-summary.mjs $HOME/git/x-summary/tmp/x-summary-config.json
+```
+
+### Create a systemd service and timer
+
+Create `$HOME/.config/systemd/user/x-summary-run-and-notify.service`:
+
+``` ini
+[Unit]
+Description=Run and Notify X.com scrape & summarize
+
+[Service]
+Type=oneshot
+ExecStart=%h/git/x-summary/tmp/x-summary-run-and-notify.sh
+```
+
+Then create a timer to trigger it at 6 am/pm at `$HOME/.config/systemd/user/x-summary-run-and-notify.timer`:
+
+``` ini
+[Unit]
+Description=Runs x-summary-run-and-notify at 6am/6pm
+
+[Timer]
+OnCalendar=*-*-* 06,18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+And reload the **USER** daemon, then enable the timer. Optionally allow the timer to run even if you're not logged in:
+
+``` bash
+systemctl --user daemon-reload
+systemctl --user enable --now x-summary-run-and-notify.timer
+
+# optional: you need this so the timer runs even if the user is NOT logged in
+sudo loginctl enable-linger $USER
+```
+
 ## Install (npm)
 
 Published builds ship minified CLI bundles; runtime libraries (Playwright, Pino, AI SDK, etc.) are installed as npm dependencies.
