@@ -1,6 +1,6 @@
 {
   "name": "x-summary",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Summarize X.com Following and For You feeds using Playwright and an LLM",
   "repository": {
     "type": "git",
