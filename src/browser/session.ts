@@ -202,6 +202,16 @@ function attachBrowserLogging(page: Page): void {
       level: 'error',
     },
     {
+      match: /WebGL/i,
+      note: 'WebGL warnings',
+      level: 'debug',
+    },
+    {
+      match: /No available adapters/i,
+      note: 'No available adapters noise',
+      level: 'debug',
+    },
+    {
       match: /Failed to load resource: the server responded with a status of 503/i,
       matchUrl: /[/][/]ads-api[.]x/i,
       note: 'Failed to load resource advertisement resource',
