@@ -66,10 +66,10 @@ describe.sequential('parsePostFromTweetDetail (live TweetDetail + fixture shape)
     );
     expect(post?.references?.[0]?.body).toContain('IRAN ALLOWED 35 SHIPS');
     const urls = post?.linkUrls ?? [];
-    expect(urls.some((url) => url.includes('pbs.twimg.com'))).toBe(true);
+    expect(urls.some((url) => URL.parse(url)?.hostname.endsWith('pbs.twimg.com'))).toBe(true);
     expect(urls.some((url) => url.startsWith('blob:'))).toBe(false);
     const refUrls = post?.references?.[0]?.linkUrls ?? [];
-    expect(refUrls.some((url) => url.includes('/i/broadcasts/'))).toBe(true);
+    expect(refUrls.some((url) => URL.parse(url)?.pathname.startsWith('/i/broadcasts/'))).toBe(true);
   }, 120_000);
 
   it('Drew thread with pmarca parent', async () => {
@@ -95,7 +95,13 @@ describe.sequential('parsePostFromTweetDetail (live TweetDetail + fixture shape)
     expect(expectStatusId(post?.thread?.[0]?.href ?? '')).toBe(
       statusId(LIVE_X_POSTS.pmarcaImproved),
     );
-    expect(post?.linkUrls?.some((url) => url.includes('pbs.twimg.com/media/'))).toBe(true);
+    expect(
+      post?.linkUrls?.some((url) => {
+        const u = URL.parse(url);
+        if (!u) return false;
+        return u.hostname.endsWith('pbs.twimg.com') && u.pathname.startsWith('/media/');
+      }),
+    ).toBe(true);
   }, 120_000);
 
   it('pmarca quote with Drew reference', async () => {

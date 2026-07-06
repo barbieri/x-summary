@@ -38,7 +38,15 @@ describe.sequential('live X post parsing', () => {
     const post = await session.scrape(POSTS.pmarcaImproved);
     expect(post.body).toContain('Improved it!');
     const urls = linkUrls(post);
-    expect(urls.some((url) => url.includes('pbs.twimg.com/media/HI9zximbgAAxUUw'))).toBe(true);
+    expect(
+      urls.some((url) => {
+        const u = URL.parse(url);
+        if (!u) return false;
+        return (
+          u.hostname.endsWith('pbs.twimg.com') && u.pathname.startsWith('/media/HI9zximbgAAxUUw')
+        );
+      }),
+    ).toBe(true);
     expect(post.references?.length ?? 0).toBeGreaterThan(0);
     expect(expectStatusId(post.references?.[0]?.href ?? '')).toBe(
       expectStatusId(POSTS.jeremyMedieval),
@@ -50,7 +58,15 @@ describe.sequential('live X post parsing', () => {
     expect(post.body).toContain('best preserved medieval street');
     expect(post.body).toContain('Domesday Book');
     const urls = linkUrls(post);
-    expect(urls.some((url) => url.includes('pbs.twimg.com/media/HI9GgLyXAAA62ZI'))).toBe(true);
+    expect(
+      urls.some((url) => {
+        const u = URL.parse(url);
+        if (!u) return false;
+        return (
+          u.hostname.endsWith('pbs.twimg.com') && u.pathname.startsWith('/media/HI9GgLyXAAA62ZI')
+        );
+      }),
+    ).toBe(true);
   }, 120_000);
 
   it('MarioNawfal mask experiment post with embedded video', async () => {
@@ -58,7 +74,7 @@ describe.sequential('live X post parsing', () => {
     expect(post.body).toContain('Mind-blowing experiment');
     expect(post.body).toContain('silicone masks');
     const urls = linkUrls(post);
-    expect(urls.some((url) => url.includes('pbs.twimg.com'))).toBe(true);
+    expect(urls.some((url) => URL.parse(url)?.hostname.endsWith('pbs.twimg.com'))).toBe(true);
     expect(urls.some((url) => url.startsWith('blob:'))).toBe(false);
   }, 120_000);
 
@@ -72,7 +88,7 @@ describe.sequential('live X post parsing', () => {
     const quoted = post.references?.[0];
     expect(quoted?.body).toContain('IRAN ALLOWED 35 SHIPS');
     const urls = linkUrls(quoted ?? post);
-    expect(urls.some((url) => url.includes('/i/broadcasts/'))).toBe(true);
+    expect(urls.some((url) => URL.parse(url)?.pathname.startsWith('/i/broadcasts/'))).toBe(true);
     expect(urls.some((url) => url.startsWith('blob:'))).toBe(false);
   }, 180_000);
 

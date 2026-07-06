@@ -90,6 +90,6 @@ export function linkUrls(post: Post): string[] {
   return post.links?.map((link) => link.url) ?? post.linkUrls ?? [];
 }
 
-export function resolvedUrl(post: Post, includes: string): string | undefined {
-  return linkUrls(post).find((url) => url.includes(includes));
+export function resolvedUrl(post: Post, hostname: string): string | undefined {
+  return linkUrls(post).find((url) => URL.parse(url)?.hostname.endsWith(hostname));
 }
