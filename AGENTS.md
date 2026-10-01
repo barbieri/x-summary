@@ -68,6 +68,7 @@ Scraping walks top-to-bottom until:
 - `config.example.json` is checked in tests against `schemas/config.schema.json`.
 - On `saveState`, validate against `state.schema.json`, then if the state file exists rename it to `{statePath}.bkp` (unlink an existing `.bkp` first), then write the new snapshot.
 - Config default `statePath`: `./tmp/state.json`
+- Persisted post link URLs may be relative or scheme-less strings from X; the link URL field is intentionally not URI-formatted, while timestamps remain strict date-times.
 
 ## Post object rules (scraping)
 
@@ -184,3 +185,6 @@ pnpm run start:bundle [config.json]                      # scrape then summarize
 - **Tweet body**: `[data-testid="tweetText"]` HTML → markdown (emoji `img` uses `alt`); if `[data-testid="tweet-text-show-more-link"]` exists, open the status URL for the full body.
 - This project is not intended to be used as a library, there is no need to keep API compatible. **NEVER** leave deprecated functions, always port the whole code to use the new version of the function when it changes.
 - URL validation, including in tests, must use `new URL()` or `URL.parse()` and validate components, or use an anchored RegExp, instead of plain `string.includes()` to avoid being flagged by CodeQL's `js/incomplete-url-substring-sanitization` such as in https://github.com/barbieri/x-summary/security/code-scanning/2
+
+- TweetDetail GraphQL may include visibility wrappers and unavailable quoted nodes without legacy.id_str; index nested results and skip unresolved nested references rather than failing the focal post.
+- Feed API HTTP 429 on /i/api/ triggers bounded backoff during feed walks; repeated throttling ends that feed with reason rate limited.

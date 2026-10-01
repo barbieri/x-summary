@@ -9,6 +9,7 @@ import { canonicalFeedHref, readPostHref, readTimestamp } from './article-fields
 import { tracedClick, waitAfterDomAction, waitForUiSettled } from './interactions.js';
 import { PostDetailScraper } from './post-detail.js';
 import { normalizePostHref, PostProcessor } from './post-processor.js';
+import { FeedRateLimit } from './rate-limit.js';
 import { TabPool } from './tab-pool.js';
 import {
   type FeedScrollKind,
@@ -361,50 +362,65 @@ async function scrollAndCollectPosts(
   const posts: Post[] = [];
   const seenInFeed = new Set<string>();
   let staleScrolls = 0;
+  const rateLimit = new FeedRateLimit(page);
   const scrollKind: FeedScrollKind = kind;
 
-  for (let attempts = 0; attempts < 600; attempts++) {
-    const step = await advanceTimelineOnce(
-      page,
-      ctx,
-      kind,
-      seenInFeed,
-      posts,
-      feed,
-      scrollKind,
-      log,
-    );
-
-    if (step === 'stop') {
-      log.info(
-        { feed, timelineItems: posts.length, reason: 'stop condition' },
-        'timeline walk ended',
-      );
-      return posts;
-    }
-
-    if (step === 'advanced') {
-      staleScrolls = 0;
-      continue;
-    }
-
-    const scrollResult = await scrollForMoreTimelinePosts(page, kind, scrollKind, log);
-    if (scrollResult === 'stalled') {
-      staleScrolls++;
-      if (staleScrolls >= 4) {
-        log.info(
-          { feed, timelineItems: posts.length, reason: 'stalled scroll' },
+  try {
+    for (let attempts = 0; attempts < 600; attempts++) {
+      if (await rateLimit.backoff()) {
+        log.warn(
+          { feed, timelineItems: posts.length, reason: 'rate limited' },
           'timeline walk ended',
         );
-        break;
+        return posts;
       }
-    } else {
-      staleScrolls = 0;
-    }
-  }
+      const step = await advanceTimelineOnce(
+        page,
+        ctx,
+        kind,
+        seenInFeed,
+        posts,
+        feed,
+        scrollKind,
+        log,
+      );
 
-  log.info({ feed, timelineItems: posts.length, reason: 'iteration limit' }, 'timeline walk ended');
-  return posts;
+      if (step === 'stop') {
+        log.info(
+          { feed, timelineItems: posts.length, reason: 'stop condition' },
+          'timeline walk ended',
+        );
+        return posts;
+      }
+
+      if (step === 'advanced') {
+        staleScrolls = 0;
+        continue;
+      }
+
+      const scrollResult = await scrollForMoreTimelinePosts(page, kind, scrollKind, log);
+      if (scrollResult === 'stalled') {
+        staleScrolls++;
+        if (staleScrolls >= 4) {
+          log.info(
+            { feed, timelineItems: posts.length, reason: 'stalled scroll' },
+            'timeline walk ended',
+          );
+          break;
+        }
+      } else {
+        staleScrolls = 0;
+      }
+    }
+
+    log.info(
+      { feed, timelineItems: posts.length, reason: 'iteration limit' },
+      'timeline walk ended',
+    );
+    return posts;
+  } finally {
+    rateLimit.detach();
+  }
 }
 
 function feedArticles(page: Page, kind: FeedKind): Locator {
