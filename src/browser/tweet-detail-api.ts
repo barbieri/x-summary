@@ -35,6 +35,7 @@ type LegacyTweet = {
 };
 
 type RawTweetResult = {
+  tweet?: RawTweetResult;
   rest_id?: string;
   legacy?: LegacyTweet;
   core?: { user_results?: { result?: { core?: { screen_name?: string } } } };
@@ -213,8 +214,9 @@ function buildBareRepostPost(
   href: string,
   legacy: LegacyTweet,
 ): Post {
-  const retweeted = node.retweeted_status_result?.result;
-  if (!retweeted) {
+  const retweeted =
+    node.retweeted_status_result?.result?.tweet ?? node.retweeted_status_result?.result;
+  if (!retweeted?.legacy?.id_str) {
     throw new Error('bare retweet missing retweeted_status_result');
   }
   return {
@@ -235,8 +237,8 @@ function buildQuoteReferences(
   graph: Map<string, RawTweetResult>,
   options: BuildOptions,
 ): Post[] {
-  const quoted = node.quoted_status_result?.result;
-  if (!options.includeQuotes || !quoted) {
+  const quoted = node.quoted_status_result?.result?.tweet ?? node.quoted_status_result?.result;
+  if (!options.includeQuotes || !quoted?.legacy?.id_str) {
     return [];
   }
   return [
@@ -309,8 +311,9 @@ function buildThreadChain(node: RawTweetResult, graph: Map<string, RawTweetResul
 }
 
 function isBareRetweet(node: RawTweetResult): boolean {
-  const retweeted = node.retweeted_status_result?.result;
-  if (!retweeted) {
+  const retweeted =
+    node.retweeted_status_result?.result?.tweet ?? node.retweeted_status_result?.result;
+  if (!retweeted?.legacy?.id_str) {
     return false;
   }
   if (node.legacy?.is_quote_status) {

@@ -59,6 +59,25 @@ describe('config schema', () => {
   });
 });
 
+describe('state schema link URLs', () => {
+  it('accepts a post with relative and malformed link strings', async () => {
+    const state = {
+      timestamp: '2026-05-22T12:00:00.000Z',
+      cutoffTimestamp: '2026-05-22T11:00:00.000Z',
+      posts: {
+        'https://x.com/a/status/1': {
+          stats: { comments: 0, reposts: 0, likes: 0 },
+          links: [{ url: '/relative/path' }, { url: 'not a uri' }],
+        },
+      },
+      following: ['https://x.com/a/status/1'],
+      forYouSuggestions: [],
+      monitored: {},
+    };
+    await expect(assertValid('state.schema.json', state, 'State')).resolves.toEqual(state);
+  });
+});
+
 describe('state schema', () => {
   it('accepts posts map with href-only feed lists', async () => {
     const state: AppState = {
