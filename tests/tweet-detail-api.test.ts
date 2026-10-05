@@ -30,7 +30,7 @@ describe('extractUrlsFromPlainText', () => {
   });
 });
 
-describe.sequential('parsePostFromTweetDetail (live TweetDetail + fixture shape)', () => {
+describe('parsePostFromTweetDetail (live TweetDetail + fixture shape)', () => {
   let session: LiveXSession;
 
   beforeAll(async () => {
