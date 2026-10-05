@@ -9,7 +9,7 @@ import {
 } from './live-x-harness.js';
 import { LIVE_X_POSTS as POSTS } from './live-x-posts.js';
 
-describe.sequential('live X post parsing', () => {
+describe('live X post parsing', () => {
   let session: LiveXSession;
 
   beforeAll(async () => {
