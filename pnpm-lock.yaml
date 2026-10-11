@@ -22,10 +22,10 @@ importers:
         version: 5.0.14(zod@4.4.3)
       '@openrouter/ai-sdk-provider':
         specifier: ^3.1.0
-        version: 3.1.0(ai@7.0.127(zod@4.4.3))(zod@4.4.3)
+        version: 3.1.0(ai@7.0.133(zod@4.4.3))(zod@4.4.3)
       ai:
         specifier: ^7.0.127
-        version: 7.0.127(zod@4.4.3)
+        version: 7.0.133(zod@4.4.3)
       ai-sdk-provider-opencode-sdk:
         specifier: ^4.1.0
         version: 4.1.0(zod@4.4.3)
@@ -84,8 +84,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@4.0.103':
-    resolution: {integrity: sha512-nnGTUHzPRQ14jhv9CL4OQrzcRBIFTBMIPKGIi9Z9u/4GtwSRxa/nxUX6np2Iwp5phOzO0a0njj/j9Jolf5AEaA==}
+  '@ai-sdk/gateway@4.0.108':
+    resolution: {integrity: sha512-UgtnyyuIpMSzhha89MAK6c2pTeQW8s9jLSmDeYI92NzqDsoyEYFZ/lYAXTXLUQxA25j5iTWPEnzGVl5adIy+8w==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -648,8 +648,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  ai@7.0.127:
-    resolution: {integrity: sha512-JNsNPk4ZvRGEJuqdVo2lYFkm7uAuf3p/RwKFWn1Wh/+IK3U1RyFWw2GXoFnhzqNfxEuj7XJB4WpIUhl1sHToWg==}
+  ai@7.0.133:
+    resolution: {integrity: sha512-OjyVMdsDp4ORPSrRB9hiYGic4bzeiOtaOzBPxOM7jiavz6tSXuMrqLwd1eILGhN669VD0G/+jxaiweRqfVulYg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1618,10 +1618,10 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.57(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/gateway@4.0.103(zod@4.4.3)':
+  '@ai-sdk/gateway@4.0.108(zod@4.4.3)':
     dependencies:
-      '@ai-sdk/provider': 4.0.21
-      '@ai-sdk/provider-utils': 5.0.53(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.25
+      '@ai-sdk/provider-utils': 5.0.57(zod@4.4.3)
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
@@ -1818,9 +1818,9 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@openrouter/ai-sdk-provider@3.1.0(ai@7.0.127(zod@4.4.3))(zod@4.4.3)':
+  '@openrouter/ai-sdk-provider@3.1.0(ai@7.0.133(zod@4.4.3))(zod@4.4.3)':
     dependencies:
-      ai: 7.0.127(zod@4.4.3)
+      ai: 7.0.133(zod@4.4.3)
       zod: 4.4.3
 
   '@oxc-project/types@0.130.0': {}
@@ -1982,11 +1982,11 @@ snapshots:
       '@opencode-ai/sdk': 1.18.34
       zod: 4.4.3
 
-  ai@7.0.127(zod@4.4.3):
+  ai@7.0.133(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 4.0.103(zod@4.4.3)
-      '@ai-sdk/provider': 4.0.21
-      '@ai-sdk/provider-utils': 5.0.53(zod@4.4.3)
+      '@ai-sdk/gateway': 4.0.108(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.25
+      '@ai-sdk/provider-utils': 5.0.57(zod@4.4.3)
       zod: 4.4.3
 
   ajv-formats@3.0.1(ajv@8.20.0):
